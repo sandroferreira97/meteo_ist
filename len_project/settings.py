@@ -25,7 +25,7 @@ SECRET_KEY = '(@5*_pdb5nf@di)%y)1n&cp35s=9p$2pvoh8bod$##3%c7m_9^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['sandroferreira97.pythonanywhere.com']
 
 
 # Application definition
@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'len_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': str(BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -121,3 +121,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = '/home/sandroferreira97/meteo_ist/meteo_ist/static'
