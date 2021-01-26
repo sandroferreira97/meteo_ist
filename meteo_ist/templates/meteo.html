@@ -21,164 +21,211 @@
                 Meteo Data
         </div>
     </div>
-   
 </nav>
-<div style="width:70%">
-</br>
-    <form style="text-align: center;">
-        <label for="start">Start:</label>
-        <input type="date" id="start" name="start"> 
-        <label for="end">End:</label>
-        <input type="date" id="end" name="end"> 
-        <button onclick="setRange()">submeter</button>
-    </form>
+
 </br>
 
+<div class="columns">
+  <div class="column "></div>
+  <div class="column is-one-fifth">
+    <label for="start">Inicio:</label>
+    <input class="input is-info" type="date" id = "start">
+  </div>
+  <div class="column is-one-fifth">
+    <label for="end">Fim:</label>
+    <input class="input is-info" type="date" id="end">
+  </div>
+  <div class="column is-one-fifth">
+    </br>
+    <button type='button' class="button is-link" onclick="setRange()">submeter</button>
+  </div>
+  <div class="column "></div>
+</div>
+
+<div class="columns">
+    <div class="column"></div>
+  <div class="column is-8">
     <canvas id="chart"></canvas>
-</br>
+    </br>
     <div style="text-align: center;">
-        <button onclick="setTemp()">Temperatura</button>
-        <button onclick="setPP()">Precipitação</button> 
-        <button onclick="setPres()">Pressão</button>
-        <button onclick="setRad()">Radiação</button>
-        <button onclick="setRh()">Humidade</button>
-        <button onclick="setWd()">wd</button>
+        <button class="button is-link" onclick="setTemp()">Temperatura</button>
+        <button class="button is-link" onclick="setPP()">Precipitação</button>
+        <button class="button is-link" onclick="setPres()">Pressão</button>
+        <button class="button is-link" onclick="setRad()">Radiação</button>
+        <button class="button is-link" onclick="setRh()">Humidade</button>
+        <!--<button onclick="setWd()">wd</button>
         <button onclick="setWg()">wg</button>
-        <button onclick="setWs()">ws</button>
+        <button onclick="setWs()">ws</button>-->
     </div>
+  </div>
+  <div class="column is-3">
+      </br>
+    <p id='max' class="subtitle"></p>
+    <p id='min' class="subtitle"></p>
+    <p id='avg' class="subtitle"></p>
+    </br>
+    <a href="{% url 'meteo_ist:excel' %}" class="button is-link">Download</a>
+  </div>
+</div>
 
-    
+<script>
+    var myChart;
+    var ctx = document.getElementById('chart').getContext('2d');
 
-    <script>
-        
-        axios.get("range/1/")
-        .then((res)=>{
-        var db = res.data;
-        var start = db.start;
-        var end = db.end;
+    axios.get("range/1/")
+    .then((res)=>{
+    var db = res.data;
+    var start = db.start;
+    var end = db.end;
 
-        document.getElementById("start").value = start;
-        document.getElementById("end").value = end;
-        
-        })
+    document.getElementById("start").value = start;
+    document.getElementById("end").value = end;
+    })
 
+    var data = "{{temp_data|safe}}";
+    var label = "Temperatura";
+    var units = "ºC";
+    var backgroundColor = 'rgba(54, 162, 235, 0.2)';
+    var borderColor = 'rgba(54, 162, 235, 1)';
+    chart(data, label, units, backgroundColor, borderColor);
+
+    function setPP(){
+        var data = "{{pp_data|safe}}";
+        var label = "Precipitação";
+        var units = "mm";
+        var backgroundColor = 'rgba(255, 99, 132, 0.2)';
+        var borderColor = 'rgba(255, 99, 132, 1)';
+        this.myChart.destroy();
+        chart(data, label, units, backgroundColor, borderColor);
+    }
+
+    function setPres(){
+        var data = "{{pres_data|safe}}";
+        var label = "Pressão Atmosférica";
+        var units = "mbar";
+        var backgroundColor = 'rgba(255, 206, 86, 0.2)';
+        var borderColor = 'rgba(255, 206, 86, 1)';
+        this.myChart.destroy();
+        chart(data, label, units, backgroundColor, borderColor);
+    }
+    function setRad(){
+        var data = "{{rad_data|safe}}";
+        var label = "Radiação Solar";
+        var units = "w m-2";
+        var backgroundColor = 'rgba(75, 192, 192, 0.2)';
+        var borderColor = 'rgba(75, 192, 192, 1)';
+        this.myChart.destroy();
+        chart(data, label, units, backgroundColor, borderColor);
+    }
+    function setRh(){
+        var data = "{{rh_data|safe}}";
+        var label = "Humidade";
+        var units = "%";
+        var backgroundColor = 'rgba(153, 102, 255, 0.2)';
+        var borderColor = 'rgba(153, 102, 255, 1)';
+        this.myChart.destroy();
+        chart(data, label, units, backgroundColor, borderColor);
+    }
+    function setTemp(){
         var data = "{{temp_data|safe}}";
-        var label = "Temperatura (ºC)";
-
+        var label = "Temperatura";
+        var units = "ºC";
         var backgroundColor = 'rgba(54, 162, 235, 0.2)';
         var borderColor = 'rgba(54, 162, 235, 1)';
+        this.myChart.destroy();
+        chart(data, label, units, backgroundColor, borderColor);
+    }
+    /*function setWd(){
+        data = "{{wd_data|safe}}";
+        label = "wd";
         chart();
+    }
+    function setWg(){
+        data = "{{wg_data|safe}}";
+        label = "wg";
+        chart();
+    }
+    function setWs(){
+        data = "{{ws_data|safe}}";
+        label = "ws";
+        chart();
+    }*/
 
-        function setPP(){
-            data = "{{pp_data|safe}}";
-            label = "Precipitação (mm)";
-            backgroundColor = 'rgba(255, 99, 132, 0.2)';
-            borderColor = 'rgba(255, 99, 132, 1)';
-            chart();
+
+    function chart(data, label, units, backgroundColor, borderColor){
+        data = data.slice(1,-1).split(',');
+        var data_final = []
+        for(i = 0; i < data.length; i++){
+            data_final.push(data[i].replace(/'/g,""));     //remove single quotes ('')
         }
 
-        function setPres(){
-            data = "{{pres_data|safe}}";
-            label = "Pressão Atmosférica (mbar)";
-            backgroundColor = 'rgba(255, 206, 86, 0.2)';
-            borderColor = 'rgba(255, 206, 86, 1)';
-            chart();
+        var dates = "{{date_data|safe}}".slice(1,-1).split(',');
+        var dates_final = []
+        for(i = 0; i < dates.length; i++){
+            dates_final.push(dates[i].replace(/'/g,""));
         }
-        function setRad(){
-            data = "{{rad_data|safe}}";
-            label = "Radiação Solar (w m-2)";
-            backgroundColor = 'rgba(75, 192, 192, 0.2)';
-            borderColor = 'rgba(75, 192, 192, 1)';
-            chart();
-        }
-        function setRh(){
-            data = "{{rh_data|safe}}";
-            label = "Humidade (%)";
-            backgroundColor = 'rgba(153, 102, 255, 0.2)';
-            borderColor = 'rgba(153, 102, 255, 1)';
-            chart();
-        }
-        function setTemp(){
-            data = "{{temp_data|safe}}";
-            label = "Temperatura (ºC)";
-            backgroundColor = 'rgba(54, 162, 235, 0.2)';
-            borderColor = 'rgba(54, 162, 235, 1)';
-            chart();
-        }
-        function setWd(){
-            data = "{{wd_data|safe}}";
-            label = "wd";
-            chart();
-        }
-        function setWg(){
-            data = "{{wg_data|safe}}";
-            label = "wg";
-            chart();
-        }
-        function setWs(){
-            data = "{{ws_data|safe}}";
-            label = "ws";
-            chart();
-        }
-        
-        
-        function chart(){
-            data = data.slice(1,-1).split(',');
-            var data_final = []
-            for(i = 0; i < data.length; i++){
-                data_final.push(data[i].replace(/'/g,""));     //remove single quotes ('')
-            }
 
-            var dates = "{{date_data|safe}}".slice(1,-1).split(',');
-            var dates_final = []
-            for(i = 0; i < dates.length; i++){
-                dates_final.push(dates[i].replace(/'/g,""));
-            }
-            console.log("{{end|safe}}")
-            var ctx = document.getElementById('chart').getContext('2d');
-            var myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates_final,
-                    datasets: [{
-                        label: label,
-                        data: data_final,
-                        fill: true,
-                        backgroundColor: backgroundColor,
-                        borderColor: borderColor,
-                            
-                        borderWidth: 3
-                    }]
-                }
-            });
+        document.getElementById("max").innerHTML = 'Max: ' + Math.max(...data_final) + ' ' + units;
+        document.getElementById("min").innerHTML = 'Min: ' + Math.min(...data_final) + ' ' + units;
+
+        var el = document.getElementById("avg");
+        var sum = 0;
+        for( var i = 0; i < data_final.length; i++ ){
+            sum +=  parseFloat(data_final[i]);
+
         }
-        
-        function setRange(){
-            
-            var startInput = document.getElementById("start").value;
-            var startDate = startInput;
-            var endInput = document.getElementById("end").value;
-            var endDate = endInput;
-            
-            axios({
-            method: 'patch',
-            url: 'range/1/',
+        var avg = sum/data_final.length;
+
+        el.innerHTML= 'Média: ' + avg.toFixed(1) + ' ' + units;
+
+
+        this.myChart = new Chart(ctx, {
+            type: 'line',
             data: {
-                start: startDate,
-                end: endDate
-            }
-          })
-          .then(data=>{
-            console.log(data);
-          })
-          .catch(error => {
-            console.log(error)
-          })
- 
+                labels: dates_final,
+                datasets: [{
+                    label: label + ' (' + units + ')',
+                    data: data_final,
+                    fill: true,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
 
+                    borderWidth: 3
+                }]
+            }
+        });
+    }
+
+    function setRange(){
+        var startInput = document.getElementById("start").value;
+        var startDate = startInput;
+        var endInput = document.getElementById("end").value;
+        var endDate = endInput;
+
+        axios({
+        method: 'patch',
+        url: 'range/1/',
+        data: {
+            start: startDate,
+            end: endDate
         }
-        
-    </script>
+        })
+        .then(data=>{
+        console.log(data);
+        })
+        .catch(error => {
+        console.log(error)
+        })
+
+        var delayInMilliseconds = 500;
+
+        setTimeout(function() {
+          location.reload();
+        }, delayInMilliseconds);
+
+    }
+
+</script>
 </div>
 
 </body>
