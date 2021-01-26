@@ -21,6 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',GetMeteo.as_view(template_name='meteo.html'), name='Meteo View'),
     #path('',GetMeteo.ajaxView, name='ajaxView'),
-    path('', include('meteo_ist.urls'))
+    path('', include(('meteo_ist.urls', 'meteo_ist'), namespace='meteo_ist'))
 ]
-
